@@ -301,11 +301,13 @@ func NewClient(ctx context.Context, underlay tunnel.Client) (*Client, error) {
 
 		//	geoipData, err := ioutil.ReadFile(cfg.Router.GeoIPFilename)
 		//	geoipData, err := ioutil.ReadFile(cfg.Router.GeoIPFilename)
-		log.Info("geoip info", cfg.Router.GeoIPFilename)
-		log.Info("geosite info", cfg.Router.GeoSiteFilename)
-		filerc, err := asset.Open(cfg.Router.GeoIPFilename)
+		log.Info("geoip path", cfg.Router.GeoIPFilename)
+		log.Info("geosite path", cfg.Router.GeoSiteFilename)
+		// filerc, err := asset.Open(cfg.Router.GeoIPFilename)
+		filerc, err := asset.Open("geoip.dat")
 		if err != nil {
-			log.Fatal(err)
+			// log.Fatal(err)
+			log.Warn(err)
 		}
 		defer filerc.Close()
 
@@ -342,9 +344,11 @@ func NewClient(ctx context.Context, underlay tunnel.Client) (*Client, error) {
 		}
 
 		//	geositeData, err := ioutil.ReadFile(cfg.Router.GeoSiteFilename)
-		filerc, err = asset.Open(cfg.Router.GeoSiteFilename)
+		// filerc, err = asset.Open(cfg.Router.GeoSiteFilename)
+		filerc, err := asset.Open("geosite.dat")
 		if err != nil {
-			log.Fatal(err)
+			log.Warn(err)
+			// log.Fatal(err)
 		}
 		defer filerc.Close()
 
