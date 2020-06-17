@@ -345,18 +345,18 @@ func NewClient(ctx context.Context, underlay tunnel.Client) (*Client, error) {
 
 		//	geositeData, err := ioutil.ReadFile(cfg.Router.GeoSiteFilename)
 		// filerc, err = asset.Open(cfg.Router.GeoSiteFilename)
-		filerc, err := asset.Open("geosite.dat")
-		if err != nil {
+		filerc1, err1 := asset.Open("geosite.dat")
+		if err1 != nil {
 			log.Warn(err)
 			// log.Fatal(err)
 		}
-		defer filerc.Close()
+		defer filerc1.Close()
 
 		buf1 := new(bytes.Buffer)
-		buf1.ReadFrom(filerc)
+		buf1.ReadFrom(filerc1)
 		//	contents := buf.String()
 		geositeData := buf1.Bytes()
-		if err != nil {
+		if err1 != nil {
 			log.Warn(err)
 		} else {
 			geosite := new(v2router.GeoSiteList)
