@@ -309,7 +309,7 @@ func NewClient(ctx context.Context, underlay tunnel.Client) (*Client, error) {
 	filerc, err := asset.Open("geoip.dat")
 	if err != nil {
 		// log.Fatal(err)
-		log.Info(err)
+		log.Info("geoip asset open", err)
 	}
 	defer filerc.Close()
 
@@ -320,7 +320,8 @@ func NewClient(ctx context.Context, underlay tunnel.Client) (*Client, error) {
 	geoipData, err3 := ioutil.ReadAll(filerc)
 
 	if err3 != nil {
-		log.Info(err3)
+		log.Info("geoip asset read", err3)
+		//	log.Info(err3)
 		//log.Warn(err3)
 	} else {
 		geoip := new(v2router.GeoIPList)
@@ -351,7 +352,8 @@ func NewClient(ctx context.Context, underlay tunnel.Client) (*Client, error) {
 	// filerc, err = asset.Open(cfg.Router.GeoSiteFilename)
 	filerc1, err1 := asset.Open("geosite.dat")
 	if err1 != nil {
-		log.Info(err1)
+		//log.Info(err1)
+		log.Info("geosite asset open", err1)
 		//log.Warn(err)
 		// log.Fatal(err)
 	}
@@ -364,7 +366,8 @@ func NewClient(ctx context.Context, underlay tunnel.Client) (*Client, error) {
 
 	geositeData, err2 := ioutil.ReadAll(filerc1)
 	if err2 != nil {
-		log.Info(err2)
+		log.Info("geosite asset read", err2)
+		// log.Info(err2)
 		//log.Warn(err2)
 	} else {
 		geosite := new(v2router.GeoSiteList)
