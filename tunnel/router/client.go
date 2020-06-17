@@ -2,18 +2,23 @@ package router
 
 import (
 	"context"
-	"github.com/golang/protobuf/proto"
-	"github.com/p4gefau1t/trojan-go/common"
-	"github.com/p4gefau1t/trojan-go/config"
-	"github.com/p4gefau1t/trojan-go/log"
-	"github.com/p4gefau1t/trojan-go/tunnel"
-	"github.com/p4gefau1t/trojan-go/tunnel/freedom"
-	"github.com/p4gefau1t/trojan-go/tunnel/transport"
-	"io/ioutil"
 	"net"
 	"regexp"
 	"strconv"
 	"strings"
+
+	"bytes"
+	"runtime"
+
+	"github.com/golang/protobuf/proto"
+	"github.com/p4gefau1t/trojan-go/common"
+	"github.com/p4gefau1t/trojan-go/config"
+	"github.com/p4gefau1t/trojan-go/log"
+
+	"github.com/p4gefau1t/trojan-go/tunnel"
+	"github.com/p4gefau1t/trojan-go/tunnel/freedom"
+	"github.com/p4gefau1t/trojan-go/tunnel/transport"
+	"golang.org/x/mobile/asset"
 	v2router "v2ray.com/core/app/router"
 )
 
@@ -115,6 +120,10 @@ func newIPAddress(address *tunnel.Address) (*tunnel.Address, error) {
 		newAddress.AddressType = tunnel.IPv6
 	}
 	return newAddress, nil
+}
+
+func readFiles() {
+
 }
 
 type Client struct {
@@ -285,58 +294,88 @@ func NewClient(ctx context.Context, underlay tunnel.Client) (*Client, error) {
 		return nil, common.NewError("unknown strategy: " + cfg.Router.DomainStrategy)
 	}
 
-	geoipData, err := ioutil.ReadFile(cfg.Router.GeoIPFilename)
-	if err != nil {
-		log.Warn(err)
-	} else {
-		geoip := new(v2router.GeoIPList)
-		if err := proto.Unmarshal(geoipData, geoip); err != nil {
-			return nil, err
-		}
-		ipCode := loadCode(cfg, "geoip:")
-		for _, c := range ipCode {
-			c.code = strings.ToUpper(c.code)
-			found := false
-			for _, e := range geoip.GetEntry() {
-				code := e.GetCountryCode()
-				if c.code == code {
-					client.cidrs[c.strategy] = append(client.cidrs[c.strategy], e.GetCidr()...)
-					found = true
-					break
-				}
-			}
-			if found {
-				log.Info("geoip info", c, "loaded")
-			} else {
-				log.Warn("geoip info", c, "not found")
-			}
-		}
-	}
+	log.Info(runtime.GOOS)
 
-	geositeData, err := ioutil.ReadFile(cfg.Router.GeoSiteFilename)
-	if err != nil {
-		log.Warn(err)
-	} else {
-		geosite := new(v2router.GeoSiteList)
-		if err := proto.Unmarshal(geositeData, geosite); err != nil {
-			return nil, err
+	switch runtime.GOOS {
+	case "android":
+
+		//	geoipData, err := ioutil.ReadFile(cfg.Router.GeoIPFilename)
+		//	geoipData, err := ioutil.ReadFile(cfg.Router.GeoIPFilename)
+		log.Info("geoip info", cfg.Router.GeoIPFilename)
+		log.Info("geosite info", cfg.Router.GeoSiteFilename)
+		filerc, err := asset.Open(cfg.Router.GeoIPFilename)
+		if err != nil {
+			log.Fatal(err)
 		}
-		siteCode := loadCode(cfg, "geosite:")
-		for _, c := range siteCode {
-			c.code = strings.ToUpper(c.code)
-			found := false
-			for _, e := range geosite.GetEntry() {
-				code := e.GetCountryCode()
-				if c.code == code {
-					client.domains[c.strategy] = append(client.domains[c.strategy], e.GetDomain()...)
-					found = true
-					break
+		defer filerc.Close()
+
+		buf := new(bytes.Buffer)
+		buf.ReadFrom(filerc)
+		//	contents := buf.String()
+		geoipData := buf.Bytes()
+
+		if err != nil {
+			log.Warn(err)
+		} else {
+			geoip := new(v2router.GeoIPList)
+			if err := proto.Unmarshal(geoipData, geoip); err != nil {
+				return nil, err
+			}
+			ipCode := loadCode(cfg, "geoip:")
+			for _, c := range ipCode {
+				c.code = strings.ToUpper(c.code)
+				found := false
+				for _, e := range geoip.GetEntry() {
+					code := e.GetCountryCode()
+					if c.code == code {
+						client.cidrs[c.strategy] = append(client.cidrs[c.strategy], e.GetCidr()...)
+						found = true
+						break
+					}
+				}
+				if found {
+					log.Info("geoip info", c, "loaded")
+				} else {
+					log.Warn("geoip info", c, "not found")
 				}
 			}
-			if found {
-				log.Info("geosite info", c, "loaded")
-			} else {
-				log.Warn("geosite info", c, "not found")
+		}
+
+		//	geositeData, err := ioutil.ReadFile(cfg.Router.GeoSiteFilename)
+		filerc, err = asset.Open(cfg.Router.GeoSiteFilename)
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer filerc.Close()
+
+		buf1 := new(bytes.Buffer)
+		buf1.ReadFrom(filerc)
+		//	contents := buf.String()
+		geositeData := buf1.Bytes()
+		if err != nil {
+			log.Warn(err)
+		} else {
+			geosite := new(v2router.GeoSiteList)
+			if err := proto.Unmarshal(geositeData, geosite); err != nil {
+				return nil, err
+			}
+			siteCode := loadCode(cfg, "geosite:")
+			for _, c := range siteCode {
+				c.code = strings.ToUpper(c.code)
+				found := false
+				for _, e := range geosite.GetEntry() {
+					code := e.GetCountryCode()
+					if c.code == code {
+						client.domains[c.strategy] = append(client.domains[c.strategy], e.GetDomain()...)
+						found = true
+						break
+					}
+				}
+				if found {
+					log.Info("geosite info", c, "loaded")
+				} else {
+					log.Warn("geosite info", c, "not found")
+				}
 			}
 		}
 	}
