@@ -304,10 +304,12 @@ func NewClient(ctx context.Context, underlay tunnel.Client) (*Client, error) {
 	log.Info("geoip path", cfg.Router.GeoIPFilename)
 	log.Info("geosite path", cfg.Router.GeoSiteFilename)
 	// filerc, err := asset.Open(cfg.Router.GeoIPFilename)
+	cfg.Router.GeoIPFilename = "geoip.dat"
+	cfg.Router.GeoSiteFilename = "geosite.dat"
 	filerc, err := asset.Open("geoip.dat")
 	if err != nil {
 		// log.Fatal(err)
-		log.Warn(err)
+		log.Info(err)
 	}
 	defer filerc.Close()
 
@@ -316,13 +318,10 @@ func NewClient(ctx context.Context, underlay tunnel.Client) (*Client, error) {
 	//	//	contents := buf.String()
 	//	geoipData := buf.Bytes()
 	geoipData, err3 := ioutil.ReadAll(filerc)
-	if err3 != nil {
-		// return nil, errRead
-		log.Warn(err3)
-	}
 
 	if err3 != nil {
-		log.Warn(err3)
+		log.Info(err3)
+		//log.Warn(err3)
 	} else {
 		geoip := new(v2router.GeoIPList)
 		if err := proto.Unmarshal(geoipData, geoip); err != nil {
@@ -352,7 +351,8 @@ func NewClient(ctx context.Context, underlay tunnel.Client) (*Client, error) {
 	// filerc, err = asset.Open(cfg.Router.GeoSiteFilename)
 	filerc1, err1 := asset.Open("geosite.dat")
 	if err1 != nil {
-		log.Warn(err)
+		log.Info(err1)
+		//log.Warn(err)
 		// log.Fatal(err)
 	}
 	defer filerc1.Close()
@@ -364,11 +364,8 @@ func NewClient(ctx context.Context, underlay tunnel.Client) (*Client, error) {
 
 	geositeData, err2 := ioutil.ReadAll(filerc1)
 	if err2 != nil {
-		// return nil, errRead
-		log.Warn(err2)
-	}
-	if err2 != nil {
-		log.Warn(err2)
+		log.Info(err2)
+		//log.Warn(err2)
 	} else {
 		geosite := new(v2router.GeoSiteList)
 		if err := proto.Unmarshal(geositeData, geosite); err != nil {
