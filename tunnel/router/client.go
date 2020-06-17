@@ -2,12 +2,12 @@ package router
 
 import (
 	"context"
+	"io/ioutil"
 	"net"
 	"regexp"
 	"strconv"
 	"strings"
 
-	"bytes"
 	"runtime"
 
 	"github.com/golang/protobuf/proto"
@@ -311,13 +311,18 @@ func NewClient(ctx context.Context, underlay tunnel.Client) (*Client, error) {
 	}
 	defer filerc.Close()
 
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(filerc)
-	//	contents := buf.String()
-	geoipData := buf.Bytes()
+	//	buf := new(bytes.Buffer)
+	//	buf.ReadFrom(filerc)
+	//	//	contents := buf.String()
+	//	geoipData := buf.Bytes()
+	geoipData, err3 := ioutil.ReadAll(filerc)
+	if err3 != nil {
+		// return nil, errRead
+		log.Warn(err3)
+	}
 
-	if err != nil {
-		log.Warn(err)
+	if err3 != nil {
+		log.Warn(err3)
 	} else {
 		geoip := new(v2router.GeoIPList)
 		if err := proto.Unmarshal(geoipData, geoip); err != nil {
@@ -352,12 +357,18 @@ func NewClient(ctx context.Context, underlay tunnel.Client) (*Client, error) {
 	}
 	defer filerc1.Close()
 
-	buf1 := new(bytes.Buffer)
-	buf1.ReadFrom(filerc1)
-	//	contents := buf.String()
-	geositeData := buf1.Bytes()
-	if err1 != nil {
-		log.Warn(err)
+	//	buf1 := new(bytes.Buffer)
+	//	buf1.ReadFrom(filerc1)
+	//	//	contents := buf.String()
+	//	geositeData := buf1.Bytes()
+
+	geositeData, err2 := ioutil.ReadAll(filerc1)
+	if err2 != nil {
+		// return nil, errRead
+		log.Warn(err2)
+	}
+	if err2 != nil {
+		log.Warn(err2)
 	} else {
 		geosite := new(v2router.GeoSiteList)
 		if err := proto.Unmarshal(geositeData, geosite); err != nil {
