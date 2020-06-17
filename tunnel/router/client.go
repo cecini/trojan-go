@@ -296,104 +296,163 @@ func NewClient(ctx context.Context, underlay tunnel.Client) (*Client, error) {
 
 	log.Info(runtime.GOOS)
 
-	//	switch runtime.GOOS {
-	//	case "android":
+	switch runtime.GOOS {
+	case "android":
 
-	//	geoipData, err := ioutil.ReadFile(cfg.Router.GeoIPFilename)
-	//	geoipData, err := ioutil.ReadFile(cfg.Router.GeoIPFilename)
-	log.Info("geoip path", cfg.Router.GeoIPFilename)
-	log.Info("geosite path", cfg.Router.GeoSiteFilename)
-	// filerc, err := asset.Open(cfg.Router.GeoIPFilename)
-	cfg.Router.GeoIPFilename = "geoip.dat"
-	cfg.Router.GeoSiteFilename = "geosite.dat"
-	filerc, err := asset.Open("geoip.dat")
-	if err != nil {
-		// log.Fatal(err)
-		log.Info("geoip asset open", err)
-	}
-	defer filerc.Close()
-
-	//	buf := new(bytes.Buffer)
-	//	buf.ReadFrom(filerc)
-	//	//	contents := buf.String()
-	//	geoipData := buf.Bytes()
-	geoipData, err3 := ioutil.ReadAll(filerc)
-
-	if err3 != nil {
-		log.Info("geoip asset read", err3)
-		//	log.Info(err3)
-		//log.Warn(err3)
-	} else {
-		geoip := new(v2router.GeoIPList)
-		if err := proto.Unmarshal(geoipData, geoip); err != nil {
-			return nil, err
+		//	geoipData, err := ioutil.ReadFile(cfg.Router.GeoIPFilename)
+		//	geoipData, err := ioutil.ReadFile(cfg.Router.GeoIPFilename)
+		log.Info("geoip path", cfg.Router.GeoIPFilename)
+		log.Info("geosite path", cfg.Router.GeoSiteFilename)
+		// filerc, err := asset.Open(cfg.Router.GeoIPFilename)
+		cfg.Router.GeoIPFilename = "geoip.dat"
+		cfg.Router.GeoSiteFilename = "geosite.dat"
+		filerc, err := asset.Open("geoip.dat")
+		if err != nil {
+			// log.Fatal(err)
+			log.Info("geoip asset open", err)
 		}
-		ipCode := loadCode(cfg, "geoip:")
-		for _, c := range ipCode {
-			c.code = strings.ToUpper(c.code)
-			found := false
-			for _, e := range geoip.GetEntry() {
-				code := e.GetCountryCode()
-				if c.code == code {
-					client.cidrs[c.strategy] = append(client.cidrs[c.strategy], e.GetCidr()...)
-					found = true
-					break
+		defer filerc.Close()
+
+		//	buf := new(bytes.Buffer)
+		//	buf.ReadFrom(filerc)
+		//	//	contents := buf.String()
+		//	geoipData := buf.Bytes()
+		geoipData, err3 := ioutil.ReadAll(filerc)
+
+		if err3 != nil {
+			log.Info("geoip asset read", err3)
+			//	log.Info(err3)
+			//log.Warn(err3)
+		} else {
+			geoip := new(v2router.GeoIPList)
+			if err := proto.Unmarshal(geoipData, geoip); err != nil {
+				return nil, err
+			}
+			ipCode := loadCode(cfg, "geoip:")
+			for _, c := range ipCode {
+				c.code = strings.ToUpper(c.code)
+				found := false
+				for _, e := range geoip.GetEntry() {
+					code := e.GetCountryCode()
+					if c.code == code {
+						client.cidrs[c.strategy] = append(client.cidrs[c.strategy], e.GetCidr()...)
+						found = true
+						break
+					}
+				}
+				if found {
+					log.Info("geoip info", c, "loaded")
+				} else {
+					log.Warn("geoip info", c, "not found")
 				}
 			}
-			if found {
-				log.Info("geoip info", c, "loaded")
-			} else {
-				log.Warn("geoip info", c, "not found")
+		}
+
+		//	geositeData, err := ioutil.ReadFile(cfg.Router.GeoSiteFilename)
+		// filerc, err = asset.Open(cfg.Router.GeoSiteFilename)
+		filerc1, err1 := asset.Open("geosite.dat")
+		if err1 != nil {
+			//log.Info(err1)
+			log.Info("geosite asset open", err1)
+			//log.Warn(err)
+			// log.Fatal(err)
+		}
+		defer filerc1.Close()
+
+		//	buf1 := new(bytes.Buffer)
+		//	buf1.ReadFrom(filerc1)
+		//	//	contents := buf.String()
+		//	geositeData := buf1.Bytes()
+
+		geositeData, err2 := ioutil.ReadAll(filerc1)
+		if err2 != nil {
+			log.Info("geosite asset read", err2)
+			// log.Info(err2)
+			//log.Warn(err2)
+		} else {
+			geosite := new(v2router.GeoSiteList)
+			if err := proto.Unmarshal(geositeData, geosite); err != nil {
+				return nil, err
 			}
-		}
-	}
-
-	//	geositeData, err := ioutil.ReadFile(cfg.Router.GeoSiteFilename)
-	// filerc, err = asset.Open(cfg.Router.GeoSiteFilename)
-	filerc1, err1 := asset.Open("geosite.dat")
-	if err1 != nil {
-		//log.Info(err1)
-		log.Info("geosite asset open", err1)
-		//log.Warn(err)
-		// log.Fatal(err)
-	}
-	defer filerc1.Close()
-
-	//	buf1 := new(bytes.Buffer)
-	//	buf1.ReadFrom(filerc1)
-	//	//	contents := buf.String()
-	//	geositeData := buf1.Bytes()
-
-	geositeData, err2 := ioutil.ReadAll(filerc1)
-	if err2 != nil {
-		log.Info("geosite asset read", err2)
-		// log.Info(err2)
-		//log.Warn(err2)
-	} else {
-		geosite := new(v2router.GeoSiteList)
-		if err := proto.Unmarshal(geositeData, geosite); err != nil {
-			return nil, err
-		}
-		siteCode := loadCode(cfg, "geosite:")
-		for _, c := range siteCode {
-			c.code = strings.ToUpper(c.code)
-			found := false
-			for _, e := range geosite.GetEntry() {
-				code := e.GetCountryCode()
-				if c.code == code {
-					client.domains[c.strategy] = append(client.domains[c.strategy], e.GetDomain()...)
-					found = true
-					break
+			siteCode := loadCode(cfg, "geosite:")
+			for _, c := range siteCode {
+				c.code = strings.ToUpper(c.code)
+				found := false
+				for _, e := range geosite.GetEntry() {
+					code := e.GetCountryCode()
+					if c.code == code {
+						client.domains[c.strategy] = append(client.domains[c.strategy], e.GetDomain()...)
+						found = true
+						break
+					}
+				}
+				if found {
+					log.Info("geosite info", c, "loaded")
+				} else {
+					log.Warn("geosite info", c, "not found")
 				}
 			}
-			if found {
-				log.Info("geosite info", c, "loaded")
-			} else {
-				log.Warn("geosite info", c, "not found")
+		}
+	default:
+		geoipData, err := ioutil.ReadFile(cfg.Router.GeoIPFilename)
+
+		if err != nil {
+			log.Info(err3)
+			//log.Warn(err3)
+		} else {
+			geoip := new(v2router.GeoIPList)
+			if err := proto.Unmarshal(geoipData, geoip); err != nil {
+				return nil, err
+			}
+			ipCode := loadCode(cfg, "geoip:")
+			for _, c := range ipCode {
+				c.code = strings.ToUpper(c.code)
+				found := false
+				for _, e := range geoip.GetEntry() {
+					code := e.GetCountryCode()
+					if c.code == code {
+						client.cidrs[c.strategy] = append(client.cidrs[c.strategy], e.GetCidr()...)
+						found = true
+						break
+					}
+				}
+				if found {
+					log.Info("geoip info", c, "loaded")
+				} else {
+					log.Warn("geoip info", c, "not found")
+				}
 			}
 		}
-	}
-	//	}
+
+		geositeData, err2 := ioutil.ReadFile(cfg.Router.GeoSiteFilename)
+		if err2 != nil {
+			log.Info(err2)
+		} else {
+			geosite := new(v2router.GeoSiteList)
+			if err := proto.Unmarshal(geositeData, geosite); err != nil {
+				return nil, err
+			}
+			siteCode := loadCode(cfg, "geosite:")
+			for _, c := range siteCode {
+				c.code = strings.ToUpper(c.code)
+				found := false
+				for _, e := range geosite.GetEntry() {
+					code := e.GetCountryCode()
+					if c.code == code {
+						client.domains[c.strategy] = append(client.domains[c.strategy], e.GetDomain()...)
+						found = true
+						break
+					}
+				}
+				if found {
+					log.Info("geosite info", c, "loaded")
+				} else {
+					log.Warn("geosite info", c, "not found")
+				}
+			}
+		}
+
+	} //end swithc
 
 	domainInfo := loadCode(cfg, "domain:")
 	for _, info := range domainInfo {

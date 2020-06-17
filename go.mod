@@ -12,7 +12,8 @@ require (
 	github.com/smartystreets/goconvey v1.6.4
 	github.com/xtaci/smux v1.5.14
 	golang.org/x/crypto v0.0.0-20200602180216-279210d13fed
-	golang.org/x/net v0.0.0-20190404232315-eb5bcb51f2a3
+	golang.org/x/mobile v0.0.0-20200329125638-4c31acba0007
+	golang.org/x/net v0.0.0-20190620200207-3b0461eec859
 	golang.org/x/sys v0.0.0-20200602225109-6fdc65e7d980 // indirect
 	golang.org/x/time v0.0.0-20200416051211-89c76fbcd5d1
 	google.golang.org/grpc v1.27.0
